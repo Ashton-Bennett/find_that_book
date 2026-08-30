@@ -1,6 +1,5 @@
 @Api_HostAddress = http://localhost:5119
 
-GET {{Api_HostAddress}}/weatherforecast/
+### Search for books
+GET {{Api_HostAddress}}/api/books/search?query=I%20want%20a%20fantasy%20book%20like%20Harry%20Potter
 Accept: application/json
-
-###
