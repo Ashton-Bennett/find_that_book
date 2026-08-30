@@ -1,7 +1,6 @@
-using System.Text.Json;
-using Api.Models;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace Api.Controllers;
 
@@ -11,13 +10,16 @@ public class BooksController : ControllerBase
 {
     private readonly IGeminiService _geminiService;
     private readonly IOpenLibraryService _openLibraryService;
+    private readonly IBookMatcher _bookMatcher;
 
     public BooksController(
         IGeminiService geminiService,
-        IOpenLibraryService openLibraryService)
+        IOpenLibraryService openLibraryService,
+        IBookMatcher bookMatcher)
     {
         _geminiService = geminiService;
         _openLibraryService = openLibraryService;
+        _bookMatcher = bookMatcher;
     }
 
     [HttpGet("search")]
@@ -28,25 +30,14 @@ public class BooksController : ControllerBase
             return BadRequest("Search query is required.");
         }
 
-        var geminiResponse =
-            await _geminiService.GenerateResponseAsync(query);
-
-        var searchQuery =
-            JsonSerializer.Deserialize<BookSearchQuery>(
-                geminiResponse.RootElement.GetRawText(),
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-        if (searchQuery == null)
-        {
-            return BadRequest("Unable to interpret search query.");
-        }
-
+        var searchQuery = await _geminiService.GenerateSearchQueryAsync(query);
+        
         var candidates =
             await _openLibraryService.SearchBooksAsync(searchQuery);
+        Console.WriteLine($"Found {candidates.Count()} candidates from Open Library.");
+        var rankedCandidates =
+            _bookMatcher.RankBooks(searchQuery, candidates);
 
-        return Ok(candidates);
+        return Ok(rankedCandidates);
     }
 }

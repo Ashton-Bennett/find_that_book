@@ -1,8 +1,8 @@
-using System.Text.Json;
+using Api.Models;
 
 namespace Api.Services;
 
 public interface IGeminiService
 {
-    Task<JsonDocument> GenerateResponseAsync(string query);
+    Task<BookSearchQuery> GenerateSearchQueryAsync(string query);
 }

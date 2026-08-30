@@ -13,8 +13,7 @@ public class OpenLibraryService : IOpenLibraryService
         _httpClient = httpClient;
     }
 
-    public async Task<IEnumerable<BookCandidate>> SearchBooksAsync(
-        BookSearchQuery searchQuery)
+    public async Task<IEnumerable<BookCandidate>> SearchBooksAsync(BookSearchQuery searchQuery)
     {
         var query = BuildSearchQuery(searchQuery);
 
@@ -43,41 +42,62 @@ public class OpenLibraryService : IOpenLibraryService
         return result.Docs.Select(book => new BookCandidate
         {
             Title = book.Title ?? string.Empty,
-
             Authors = book.AuthorName ?? [],
-
+            Subjects = book.Subjects ?? [],
+            Places = book.Places ?? [],
+            People = book.People ?? [],
+            Publishers = book.Publishers ?? [],
+            Languages = book.Languages ?? [],
             FirstPublishYear = book.FirstPublishYear,
-
             OpenLibraryKey = book.Key,
-
             CoverUrl = book.CoverI.HasValue
                 ? $"https://covers.openlibrary.org/b/id/{book.CoverI}-L.jpg"
                 : null
         });
     }
 
-    private static string BuildSearchQuery(
-        BookSearchQuery searchQuery)
+    private static string BuildSearchQuery(BookSearchQuery searchQuery)
     {
         var parts = new List<string>();
 
         if (!string.IsNullOrWhiteSpace(searchQuery.Title))
-        {
-            parts.Add(searchQuery.Title);
-        }
+            parts.Add($"title:{searchQuery.Title}");
 
         if (!string.IsNullOrWhiteSpace(searchQuery.Author))
+            parts.Add($"author:{searchQuery.Author}");
+
+        foreach (var subject in searchQuery.Subjects)
+            parts.Add($"subject:{subject}");
+
+        foreach (var place in searchQuery.Places)
+            parts.Add($"place:{place}");
+
+        foreach (var person in searchQuery.People)
+            parts.Add($"person:{person}");
+
+        foreach (var publisher in searchQuery.Publishers)
+            parts.Add($"publisher:{publisher}");
+
+        foreach (var language in searchQuery.Languages)
+            parts.Add($"language:{language}");
+
+        if (searchQuery.PublishYearFrom.HasValue ||
+            searchQuery.PublishYearTo.HasValue)
         {
-            parts.Add(searchQuery.Author);
+            var from = searchQuery.PublishYearFrom?.ToString() ?? "*";
+            var to = searchQuery.PublishYearTo?.ToString() ?? "*";
+
+            parts.Add($"first_publish_year:[{from} TO {to}]");
         }
 
-        if (searchQuery.Keywords.Count > 0)
-        {
-            parts.AddRange(searchQuery.Keywords);
-        }
+        if (parts.Count == 0 && !string.IsNullOrWhiteSpace(searchQuery.Query))
+            return searchQuery.Query;
+
+        Console.WriteLine($"Built Open Library search query: {string.Join(" ", parts)}");    
 
         return string.Join(" ", parts);
     }
+
 
     private class OpenLibrarySearchResponse
     {
@@ -104,5 +124,20 @@ public class OpenLibraryService : IOpenLibraryService
 
         [JsonPropertyName("cover_i")]
         public int? CoverI { get; set; }
+        
+        [JsonPropertyName("subject")]
+        public List<string>? Subjects { get; set; }
+
+        [JsonPropertyName("place")]
+        public List<string>? Places { get; set; }
+
+        [JsonPropertyName("person")]
+        public List<string>? People { get; set; }
+
+        [JsonPropertyName("publisher")]
+        public List<string>? Publishers { get; set; }
+
+        [JsonPropertyName("language")]
+        public List<string>? Languages { get; set; }
     }
 }

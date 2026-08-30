@@ -11,53 +11,151 @@ public class BookMatcher : IBookMatcher
         return candidates
             .Select(candidate => ScoreCandidate(searchQuery, candidate))
             .OrderByDescending(result => result.Score)
-            .Select(result => result.Candidate);
+            .Select(result =>
+            {
+                result.Candidate.Explanation = result.Explanation;
+                return result.Candidate;
+            });
     }
 
     private static MatchResult ScoreCandidate(
         BookSearchQuery searchQuery,
         BookCandidate candidate)
     {
-        var titleScore = CalculateTitleScore(
-            searchQuery.Title,
-            candidate.Title);
+        var scores = new List<double>();
+        var matchedCriteria = new List<string>();
 
-        var authorScore = CalculateAuthorScore(
-            searchQuery.Author,
-            candidate.Authors);
+        if (!string.IsNullOrWhiteSpace(searchQuery.Title))
+        {
+            var score = CalculateStringScore(
+                searchQuery.Title,
+                candidate.Title);
 
-        var score =
-            (titleScore * 0.6) +
-            (authorScore * 0.4);
+            scores.Add(score);
 
-        candidate.Explanation =
-            GenerateExplanation(
-                titleScore,
-                authorScore,
-                searchQuery);
+            if (score > 0)
+                matchedCriteria.Add("title");
+        }
 
-        return new MatchResult(candidate, score);
+        if (!string.IsNullOrWhiteSpace(searchQuery.Author))
+        {
+            var score = CalculateListScore(
+                searchQuery.Author,
+                candidate.Authors);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("author");
+        }
+
+        if (searchQuery.Subjects.Count > 0)
+        {
+            var score = CalculateListScore(
+                searchQuery.Subjects,
+                candidate.Subjects);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("subject");
+        }
+
+        if (searchQuery.Places.Count > 0)
+        {
+            var score = CalculateListScore(
+                searchQuery.Places,
+                candidate.Places);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("place");
+        }
+
+        if (searchQuery.People.Count > 0)
+        {
+            var score = CalculateListScore(
+                searchQuery.People,
+                candidate.People);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("person");
+        }
+
+        if (searchQuery.Publishers.Count > 0)
+        {
+            var score = CalculateListScore(
+                searchQuery.Publishers,
+                candidate.Publishers);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("publisher");
+        }
+
+        if (searchQuery.Languages.Count > 0)
+        {
+            var score = CalculateListScore(
+                searchQuery.Languages,
+                candidate.Languages);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("language");
+        }
+
+        if (searchQuery.PublishYearFrom.HasValue ||
+            searchQuery.PublishYearTo.HasValue)
+        {
+            var score = CalculateYearScore(
+                searchQuery.PublishYearFrom,
+                searchQuery.PublishYearTo,
+                candidate.FirstPublishYear);
+
+            scores.Add(score);
+
+            if (score > 0)
+                matchedCriteria.Add("publication year");
+        }
+
+        var finalScore = scores.Count > 0
+            ? scores.Average()
+            : 0;
+
+        var explanation = GenerateExplanation(
+            finalScore,
+            matchedCriteria,
+            scores.Count);
+
+        return new MatchResult(
+            candidate,
+            finalScore,
+            explanation);
     }
 
-    private static double CalculateTitleScore(
-        string? searchTitle,
-        string candidateTitle)
+    private static double CalculateStringScore(
+        string? searchValue,
+        string candidateValue)
     {
-        if (string.IsNullOrWhiteSpace(searchTitle))
+        if (string.IsNullOrWhiteSpace(searchValue) ||
+            string.IsNullOrWhiteSpace(candidateValue))
         {
             return 0;
         }
 
-        var normalizedSearchTitle = Normalize(searchTitle);
-        var normalizedCandidateTitle = Normalize(candidateTitle);
+        var normalizedSearch = Normalize(searchValue);
+        var normalizedCandidate = Normalize(candidateValue);
 
-        if (normalizedSearchTitle == normalizedCandidateTitle)
-        {
+        if (normalizedSearch == normalizedCandidate)
             return 1.0;
-        }
 
-        if (normalizedCandidateTitle.Contains(normalizedSearchTitle) ||
-            normalizedSearchTitle.Contains(normalizedCandidateTitle))
+        if (normalizedCandidate.Contains(normalizedSearch) ||
+            normalizedSearch.Contains(normalizedCandidate))
         {
             return 0.8;
         }
@@ -65,35 +163,76 @@ public class BookMatcher : IBookMatcher
         return 0;
     }
 
-    private static double CalculateAuthorScore(
-        string? searchAuthor,
-        List<string> candidateAuthors)
+    private static double CalculateListScore(
+        string searchValue,
+        List<string> candidateValues)
     {
-        if (string.IsNullOrWhiteSpace(searchAuthor) ||
-            candidateAuthors.Count == 0)
+        return CalculateListScore(
+            [searchValue],
+            candidateValues);
+    }
+
+    private static double CalculateListScore(
+        IEnumerable<string> searchValues,
+        List<string> candidateValues)
+    {
+        if (!candidateValues.Any())
+            return 0;
+
+        var normalizedCandidates = candidateValues
+            .Select(Normalize)
+            .ToList();
+
+        var scores = searchValues
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(searchValue =>
+            {
+                var normalizedSearch = Normalize(searchValue);
+
+                if (normalizedCandidates.Any(
+                    candidate => candidate == normalizedSearch))
+                {
+                    return 1.0;
+                }
+
+                if (normalizedCandidates.Any(
+                    candidate =>
+                        candidate.Contains(normalizedSearch) ||
+                        normalizedSearch.Contains(candidate)))
+                {
+                    return 0.8;
+                }
+
+                return 0;
+            })
+            .ToList();
+
+        return scores.Count > 0
+            ? scores.Average()
+            : 0;
+    }
+
+    private static double CalculateYearScore(
+        int? searchYearFrom,
+        int? searchYearTo,
+        int? candidateYear)
+    {
+        if (!candidateYear.HasValue)
+            return 0;
+
+        if (searchYearFrom.HasValue &&
+            candidateYear < searchYearFrom.Value)
         {
             return 0;
         }
 
-        var normalizedSearchAuthor = Normalize(searchAuthor);
-
-        foreach (var author in candidateAuthors)
+        if (searchYearTo.HasValue &&
+            candidateYear > searchYearTo.Value)
         {
-            var normalizedAuthor = Normalize(author);
-
-            if (normalizedSearchAuthor == normalizedAuthor)
-            {
-                return 1.0;
-            }
-
-            if (normalizedAuthor.Contains(normalizedSearchAuthor) ||
-                normalizedSearchAuthor.Contains(normalizedAuthor))
-            {
-                return 0.8;
-            }
+            return 0;
         }
 
-        return 0;
+        return 1.0;
     }
 
     private static string Normalize(string value)
@@ -108,44 +247,48 @@ public class BookMatcher : IBookMatcher
     }
 
     private static string GenerateExplanation(
-        double titleScore,
-        double authorScore,
-        BookSearchQuery searchQuery)
+        double score,
+        List<string> matchedCriteria,
+        int criteriaCount)
     {
-        if (titleScore >= 1.0 && authorScore >= 1.0)
+        if (criteriaCount == 0)
+            return "No specific search criteria were provided.";
+
+        if (score >= 0.9)
         {
-            return "Strong title and author match.";
+            return $"Strong match on {FormatCriteria(matchedCriteria)}.";
         }
 
-        if (titleScore >= 1.0)
+        if (score >= 0.7)
         {
-            return "Strong title match.";
+            return $"Good match on {FormatCriteria(matchedCriteria)}.";
         }
 
-        if (authorScore >= 1.0)
+        if (score > 0)
         {
-            return "Strong author match.";
+            return $"Partial match on {FormatCriteria(matchedCriteria)}.";
         }
 
-        if (titleScore > 0 && authorScore > 0)
-        {
-            return "Title and author partially match.";
-        }
+        return "No strong matches found for the requested criteria.";
+    }
 
-        if (titleScore > 0)
-        {
-            return "Partial title match.";
-        }
+    private static string FormatCriteria(List<string> criteria)
+    {
+        if (criteria.Count == 0)
+            return "the requested criteria";
 
-        if (authorScore > 0)
-        {
-            return "Partial author match.";
-        }
+        if (criteria.Count == 1)
+            return criteria[0];
 
-        return "Weak match based on the available information.";
+        if (criteria.Count == 2)
+            return $"{criteria[0]} and {criteria[1]}";
+
+        return $"{string.Join(", ", criteria.Take(criteria.Count - 1))}, " +
+               $"and {criteria[^1]}";
     }
 
     private record MatchResult(
         BookCandidate Candidate,
-        double Score);
+        double Score,
+        string Explanation);
 }

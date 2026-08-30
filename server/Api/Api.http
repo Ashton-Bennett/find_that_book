@@ -1,5 +1,18 @@
 @Api_HostAddress = http://localhost:5119
 
-### Search for books
+
+### Fantasy / Title
 GET {{Api_HostAddress}}/api/books/search?query=I%20want%20a%20fantasy%20book%20like%20Harry%20Potter
+Accept: application/json
+
+###
+
+### Partial Title
+GET {{Api_HostAddress}}/api/books/search?query=tale%20two%20cities
+Accept: application/json
+
+###
+
+### Author Only
+GET {{Api_HostAddress}}/api/books/search?query=dickens
 Accept: application/json
