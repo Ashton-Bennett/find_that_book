@@ -41,9 +41,19 @@ function App() {
 
   return (
     <div style={{ margin: "4rem" }}>
-      <form className="center" onSubmit={handleSubmit}>
+      <form
+        className="center"
+        onSubmit={handleSubmit}
+        style={{ marginBottom: "4rem" }}
+      >
         <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
+          <img
+            src={heroImg}
+            className="base"
+            width="170"
+            height="179"
+            alt="Find That Book"
+          />
         </div>
         <div>
           <h1>Find That Book</h1>
@@ -70,6 +80,7 @@ function App() {
           </button>
         </div>
       </form>
+
       <section className="center">
         {error && <p>{error}</p>}
 
