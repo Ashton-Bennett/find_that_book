@@ -4,52 +4,48 @@ This application provides a natural-language book search experience that allows 
 
 ## Overall Design
 
-User
-│
-│ natural-language search
-▼
-UI / Frontend  
- │
-│ GET /api/books/search?query=...
-▼
-BooksController / Our API
-│
-▼
-GeminiService
-│
-│ extract structured fields
-▼
-BookSearchQuery
-│
-│ title / author / subjects /
-│ places / people / publishers /
-│ languages / publication year
-▼
-OpenLibraryService
-│
-│ build Open Library query
-▼
-Open Library API
-│
-│ candidates
-▼
-BookCandidate[]
-│
-▼
-BookMatcher
-│
-│ compare search criteria
-│ calculate confidence
-│ generate explanation
-▼
-Ranked BookCandidate[]
-│
-▼
-UI / Frontend
-│
-▼
-Book Result Cards
+```mermaid
+flowchart TD
+    User["User"]
 
+    subgraph Frontend["UI / Frontend"]
+        UI["Search UI"]
+        Results["Book Result Cards"]
+    end
+
+    subgraph API["Our .NET API"]
+        Controller["BooksController"]
+        GeminiService["GeminiService"]
+        SearchQuery["BookSearchQuery"]
+        OpenLibraryService["OpenLibraryService"]
+        Matcher["BookMatcher"]
+    end
+
+    Gemini["Google Gemini API"]
+    OpenLibrary["Open Library API"]
+
+    User -->|"Natural-language search"| UI
+
+    UI -->|"GET /api/books/search?query=..."| Controller
+
+    Controller --> GeminiService
+    GeminiService -->|"Extract structured fields"| Gemini
+    Gemini -->|"Structured search data"| GeminiService
+
+    GeminiService --> SearchQuery
+
+    SearchQuery --> OpenLibraryService
+    OpenLibraryService -->|"Build Open Library query"| OpenLibrary
+
+    OpenLibrary -->|"Book candidates"| OpenLibraryService
+
+    OpenLibraryService --> Matcher
+    SearchQuery --> Matcher
+
+    Matcher -->|"Rank, calculate confidence,\nand generate explanation"| Results
+
+    Results --> UI
+    UI --> User
 ## Application Components/Responsibility
 
 | Component            | Responsibility                                      |
@@ -67,22 +63,22 @@ Book Result Cards
 
 ## Getting a Gemini API Key
 
-1. **Visit Google AI Studio**  
+1. **Visit Google AI Studio**
    Go to the official [Google AI Studio](https://aistudio.google.com/) platform.
 
-2. **Log In**  
+2. **Log In**
    Sign in using your standard Google Account.
 
-3. **Accept the Terms**  
+3. **Accept the Terms**
    Read and accept the terms of service if prompted.
 
-4. **Create an API Key**  
+4. **Create an API Key**
    Click **"Get API key"**, usually located in the top-left corner of the dashboard.
 
-5. **Select a Project**  
+5. **Select a Project**
    Click **"Create API key"**. You can attach the key to an existing Google Cloud project or automatically create a new one.
 
-6. **Copy and Save**  
+6. **Copy and Save**
    Copy your generated API key and store it securely. Do not commit it to GitHub or include it directly in your source code.
 
 ## Setting Your Gemini API Key
@@ -126,3 +122,4 @@ Book Result Cards
 ## TODO / next steps
 
 Visit this file to get ideas on how to better the application: docs/ImprovementNotes.md
+```
