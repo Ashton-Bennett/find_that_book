@@ -23,4 +23,5 @@ public class BookCandidate
     public string? CoverUrl { get; set; }
 
     public string Explanation { get; set; } = string.Empty;
+    public double ConfidenceScore { get; set; }
 }

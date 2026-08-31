@@ -152,7 +152,7 @@ public class GeminiService : IGeminiService
 
         using var httpRequest = new HttpRequestMessage(
             HttpMethod.Post,
-            "v1beta/models/gemini-3.6-flash:generateContent");
+            "v1beta/models/gemini-3.5-flash:generateContent");
 
         httpRequest.Headers.Add("x-goog-api-key", apiKey);
         httpRequest.Content = JsonContent.Create(request);

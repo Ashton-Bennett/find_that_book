@@ -14,9 +14,11 @@ public class BookMatcher : IBookMatcher
             .Select(result =>
             {
                 result.Candidate.Explanation = result.Explanation;
+                result.Candidate.ConfidenceScore = result.Score;
                 return result.Candidate;
             });
     }
+
 
     private static MatchResult ScoreCandidate(
         BookSearchQuery searchQuery,

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import heroImg from "./assets/hero.png";
 import "./App.css";
+import type { Book } from "./types/Book";
 
 function App() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,16 +21,16 @@ function App() {
 
     try {
       const response = await fetch(
-        `/api/books/search?q=${encodeURIComponent(query)}`,
+        `http://localhost:5119/api/books/search?query=${encodeURIComponent(query)}`,
       );
 
       if (!response.ok) {
         throw new Error("Failed to search for books");
       }
 
-      const data = await response.json();
+      const data: Book[] = await response.json();
 
-      setResults(data.results);
+      setResults(data);
     } catch (err) {
       setError(err.message);
       setResults([]);
@@ -39,8 +40,8 @@ function App() {
   };
 
   return (
-    <>
-      <form id="center" onSubmit={handleSubmit}>
+    <div style={{ margin: "4rem" }}>
+      <form className="center" onSubmit={handleSubmit}>
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
         </div>
@@ -69,89 +70,94 @@ function App() {
           </button>
         </div>
       </form>
+      <section className="center">
+        {error && <p>{error}</p>}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          {error && <p>{error}</p>}
+        {!loading && !error && results.length === 0 && <p>No books found.</p>}
 
-          {!loading && !error && results.length === 0 && <p>No books found.</p>}
-
-          {results.map((book) => (
-            // <BookResult key={book.openLibraryId} book={book} />
-            <div key={book.openLibraryId} className="book-result">
-              <h3>{book.title}</h3>
-              <p>Author: {book.author}</p>
-              <p>Open Library ID: {book.openLibraryId}</p>
+        {results.map((book) => (
+          <div key={book.openLibraryKey} className="book-result">
+            <div className="book-cover">
+              {book.coverUrl ? (
+                <img src={book.coverUrl} alt={`Cover of ${book.title}`} />
+              ) : (
+                <div className="no-cover">No Cover</div>
+              )}
             </div>
-          ))}
-        </div>
 
-        {/* example styles */}
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+            <div className="book-details">
+              <h3>
+                {book.openLibraryKey ? (
+                  <a
+                    href={`https://openlibrary.org${book.openLibraryKey}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="purple-title"
+                  >
+                    {book.title}
+                  </a>
+                ) : (
+                  book.title
+                )}
+              </h3>
+
+              {book.authors?.length > 0 && (
+                <p>
+                  <strong>Author:</strong> {book.authors.join(", ")}
+                </p>
+              )}
+
+              {book.firstPublishYear && (
+                <p>
+                  <strong>Published:</strong> {book.firstPublishYear}
+                </p>
+              )}
+
+              {book.subjects?.length > 0 && (
+                <p>
+                  <strong>Subjects:</strong> {book.subjects.join(", ")}
+                </p>
+              )}
+
+              {book.places?.length > 0 && (
+                <p>
+                  <strong>Places:</strong> {book.places.join(", ")}
+                </p>
+              )}
+
+              {book.people?.length > 0 && (
+                <p>
+                  <strong>People:</strong> {book.people.join(", ")}
+                </p>
+              )}
+
+              {book.publishers?.length > 0 && (
+                <p>
+                  <strong>Publisher:</strong> {book.publishers.join(", ")}
+                </p>
+              )}
+
+              {book.languages?.length > 0 && (
+                <p>
+                  <strong>Languages:</strong> {book.languages.join(", ")}
+                </p>
+              )}
+
+              {typeof book.confidenceScore === "number" && (
+                <p>
+                  <strong>Match:</strong>{" "}
+                  {(book.confidenceScore * 100).toFixed(0)}%
+                </p>
+              )}
+
+              {book.explanation && (
+                <p className="match-explanation">{book.explanation}</p>
+              )}
+            </div>
+          </div>
+        ))}
       </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </div>
   );
 }
 
