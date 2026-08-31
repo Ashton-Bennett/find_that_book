@@ -7,45 +7,34 @@ This application provides a natural-language book search experience that allows 
 ```mermaid
 flowchart TD
     User["User"]
-
-    subgraph Frontend["UI / Frontend"]
-        UI["Search UI"]
-        Results["Book Result Cards"]
-    end
-
-    subgraph API["Our .NET API"]
-        Controller["BooksController"]
-        GeminiService["GeminiService"]
-        SearchQuery["BookSearchQuery"]
-        OpenLibraryService["OpenLibraryService"]
-        Matcher["BookMatcher"]
-    end
-
-    Gemini["Google Gemini API"]
+    UI["UI / Frontend"]
+    Controller["BooksController"]
+    GeminiService["GeminiService"]
+    SearchQuery["BookSearchQuery"]
+    OpenLibraryService["OpenLibraryService"]
     OpenLibrary["Open Library API"]
+    Matcher["BookMatcher"]
+    Results["Book Result Cards"]
 
     User -->|"Natural-language search"| UI
-
     UI -->|"GET /api/books/search?query=..."| Controller
 
     Controller --> GeminiService
-    GeminiService -->|"Extract structured fields"| Gemini
-    Gemini -->|"Structured search data"| GeminiService
+    GeminiService -->|"Extract structured fields"| SearchQuery
 
-    GeminiService --> SearchQuery
+    GeminiService -.->|"Uses"| Gemini["Google Gemini API"]
 
     SearchQuery --> OpenLibraryService
-    OpenLibraryService -->|"Build Open Library query"| OpenLibrary
-
+    OpenLibraryService -->|"Search request"| OpenLibrary
     OpenLibrary -->|"Book candidates"| OpenLibraryService
 
     OpenLibraryService --> Matcher
     SearchQuery --> Matcher
 
-    Matcher -->|"Rank, calculate confidence,\nand generate explanation"| Results
-
+    Matcher -->|"Rank results, calculate confidence, generate explanation"| Results
     Results --> UI
-    UI --> User
+```
+
 ## Application Components/Responsibility
 
 | Component            | Responsibility                                      |
@@ -122,4 +111,7 @@ flowchart TD
 ## TODO / next steps
 
 Visit this file to get ideas on how to better the application: docs/ImprovementNotes.md
+
+```
+
 ```
