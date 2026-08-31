@@ -122,3 +122,7 @@ Book Result Cards
 
 1. Change current directory to the Root root of the project.
 2. dotnet test server/Api.Tests/Api.Tests.csproj
+
+## TODO / next steps
+
+Visit this file to get ideas on how to better the application: docs/ImprovementNotes.md
