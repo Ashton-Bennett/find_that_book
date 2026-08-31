@@ -72,12 +72,15 @@ flowchart TD
 
 ## Setting Your Gemini API Key
 
-1. **Open your terminal** and navigate to the project directory.
+1. **Open your terminal** and navigate to the project root directory.
 
 2. **Run the following commands:**
-   cd server/Api
-   dotnet user-secrets init
-   dotnet user-secrets set "Gemini:ApiKey" "YOUR_ACTUAL_API_KEY"
+
+```bash
+cd server/Api
+dotnet user-secrets init
+dotnet user-secrets set "Gemini:ApiKey" "YOUR_ACTUAL_API_KEY"
+```
 
 ## Run these commands initially to set up dependencies
 
