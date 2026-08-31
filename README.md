@@ -84,37 +84,53 @@ dotnet user-secrets set "Gemini:ApiKey" "YOUR_ACTUAL_API_KEY"
 
 ## Run these commands initially to set up dependencies
 
-**Frontend**
+### Frontend
 
-1. Change current directory to Client.
-2. Run npm i
+1. Change the current directory to `Client`.
+2. Run:
 
-**Backend**
+```bash
+npm install
+```
 
-1. Change current directory to Server.
-2. dotnet restore
+### Backend
 
-## To run Locally
+1. Change the current directory to `Server`.
+2. Run:
 
-**Frontend**
+```bash
+dotnet restore
+```
 
-1. Change current directory to Client.
-2. Run npm run dev
+## To Run Locally
 
-**Backend**
+### Frontend
 
-1. Change current directory to Server.
-2. dotnet run --project Api/Api.csproj
+1. Change the current directory to `Client`.
+2. Run:
 
-## To run unit tests
+```bash
+npm run dev
+```
 
-1. Change current directory to the Root root of the project.
-2. dotnet test server/Api.Tests/Api.Tests.csproj
+### Backend
+
+1. Change the current directory to `Server`.
+2. Run:
+
+```bash
+dotnet run --project Api/Api.csproj
+```
+
+## To Run Unit Tests
+
+1. Change the current directory to the root of the project.
+2. Run:
+
+```bash
+dotnet test server/Api.Tests/Api.Tests.csproj
+```
 
 ## TODO / next steps
 
 Visit this file to get ideas on how to better the application: docs/ImprovementNotes.md
-
-```
-
-```
