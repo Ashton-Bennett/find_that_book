@@ -245,6 +245,7 @@ public class BookMatcher : IBookMatcher
             .Replace(",", "")
             .Replace(".", "")
             .Replace("'", "")
+            .Replace("-", " ")
             .Trim();
     }
 

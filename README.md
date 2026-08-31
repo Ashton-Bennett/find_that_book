@@ -45,7 +45,7 @@ BookMatcher
 Ranked BookCandidate[]
 │
 ▼
-React
+UI / Frontend
 │
 ▼
 Book Result Cards
@@ -62,6 +62,8 @@ Book Result Cards
 | `BookCandidate`      | Normalized representation of an Open Library result |
 | `BookMatcher`        | Ranking, confidence score, and explanation          |
 | Open Library         | Actual book search/data                             |
+
+**Getting Started**
 
 ## Getting a Gemini API Key
 
